@@ -16,8 +16,6 @@ import { produtosMock, Produto } from '../../data/produtosMock';
 import { tiposCoposMock, tiposCopos } from '../../data/coposMock';
 import './Ecommerce.css';
 import { useHistory } from 'react-router-dom';
-import { addProductToCart } from '../../utils/cartHelper';
-import { cartService } from '../../services/checkoutService';
 
 // Importar Swiper
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -37,29 +35,52 @@ const Ecommerce: React.FC = () => {
     updateCartCount();
   }, []);
 
-  const updateCartCount = () => {
-    const count = cartService.getTotalItems();
-    setCartCount(count);
+  const updateCartCount = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/checkout/cart');
+      const data = await response.json();
+      
+      if (data.success && data.cart) {
+        setCartCount(data.cart.itemCount || 0);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar carrinho:', error);
+    }
   };
 
   const handleAddToCart = async (produto: Produto) => {
     try {
-      const response = await addProductToCart(produto, 1);
+      const response = await fetch('http://localhost:3000/api/checkout/add-to-cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: produto.id,
+          productName: produto.nome,
+          price: produto.preco,
+          quantity: 1,
+          image: produto.imagem
+        })
+      });
+
+      const data = await response.json();
       
-      if (response.success) {
-        setToastMessage(response.message || 'Produto adicionado!');
+      if (data.success) {
+        setToastMessage('Produto adicionado ao carrinho!');
         setToastColor('success');
         setShowToast(true);
         
         // Atualizar contador
         updateCartCount();
       } else {
-        setToastMessage(response.error || 'Erro ao adicionar produto');
+        setToastMessage(data.error || 'Erro ao adicionar produto');
         setToastColor('danger');
         setShowToast(true);
       }
     } catch (error) {
-      setToastMessage('Erro ao adicionar produto');
+      console.error('Erro ao adicionar ao carrinho:', error);
+      setToastMessage('Erro ao conectar com o servidor');
       setToastColor('danger');
       setShowToast(true);
     }

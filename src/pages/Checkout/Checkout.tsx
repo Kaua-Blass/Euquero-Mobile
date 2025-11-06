@@ -17,10 +17,17 @@ import {
   IonToast,
   IonAlert
 } from '@ionic/react';
-import { chevronForward, arrowBackOutline } from 'ionicons/icons';
+import { arrowBackOutline, trashOutline, chevronForwardOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { cartService, checkoutService, CartItem, Order } from '../../services/checkoutService';
 import './Checkout.css';
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+}
 
 const Checkout: React.FC = () => {
   const history = useHistory();
@@ -30,34 +37,70 @@ const Checkout: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [toastColor, setToastColor] = useState<'success' | 'danger'>('success');
   const [showAlert, setShowAlert] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  
-  // Calcular totais
-  const totals = checkoutService.calculateTotals(cartItems, promoCode);
 
   useEffect(() => {
-    // Carregar itens do carrinho
     loadCart();
   }, []);
 
-  const loadCart = () => {
-    const items = cartService.getCart();
-    setCartItems(items);
+  const loadCart = async () => {
+    try {
+      // Buscar carrinho do backend
+      const response = await fetch('http://localhost:3000/api/checkout/cart');
+      const data = await response.json();
+      
+      if (data.success && data.cart) {
+        // Mapear itens do backend para o formato do frontend
+        const items = data.cart.items.map((item: any) => ({
+          id: item.productId,
+          name: item.productName,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image
+        }));
+        setCartItems(items);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar carrinho:', error);
+    }
   };
 
   const handleBack = () => {
     history.push('/ecommerce');
   };
 
-  const handleProcessOrder = async () => {
-    // Validar se há itens no carrinho
+  const handleRemoveItem = async (productId: number) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/checkout/cart/${productId}`, {
+        method: 'DELETE'
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setToastMessage('Item removido do carrinho');
+        setToastColor('success');
+        setShowToast(true);
+        loadCart(); // Recarregar carrinho
+      }
+    } catch (error) {
+      console.error('Erro ao remover item:', error);
+      setToastMessage('Erro ao remover item');
+      setToastColor('danger');
+      setShowToast(true);
+    }
+  };
+
+  const calculateTotal = () => {
+    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  };
+
+  const handleProcessOrder = () => {
     if (cartItems.length === 0) {
       setToastMessage('Seu carrinho está vazio!');
       setToastColor('danger');
       setShowToast(true);
       return;
     }
-
     setShowAlert(true);
   };
 
@@ -65,38 +108,44 @@ const Checkout: React.FC = () => {
     setLoading(true);
 
     try {
-      // Criar objeto de pedido
-      const order: Order = {
-        items: cartItems,
-        address: {
-          street: 'Rua Exemplo',
-          number: '123',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          state: 'SP',
-          zipCode: '01234-567'
+      // Enviar pedido para o backend
+      const response = await fetch('http://localhost:3000/api/checkout/process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
         },
-        paymentMethod: {
-          type: 'credit_card',
-          cardNumber: '**** **** **** 1234'
-        },
-        subtotal: totals.subtotal,
-        shipping: totals.shipping,
-        tax: totals.tax,
-        discount: totals.discount,
-        total: totals.total,
-        promoCode: promoCode || undefined
-      };
+        body: JSON.stringify({
+          items: cartItems.map(item => ({
+            productId: item.id,
+            productName: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image
+          })),
+          customerInfo: {
+            name: 'Cliente',
+            email: 'cliente@email.com',
+            phone: '(11) 99999-9999'
+          },
+          paymentMethod: 'credit_card',
+          deliveryAddress: {
+            street: 'Rua Exemplo',
+            number: '123',
+            city: 'São Paulo',
+            state: 'SP',
+            zipCode: '01234-567'
+          }
+        })
+      });
 
-      // Processar pedido
-      const response = await checkoutService.processOrder(order);
+      const data = await response.json();
 
-      if (response.success) {
-        setToastMessage(`Pedido ${response.orderId} realizado com sucesso!`);
+      if (data.success) {
+        setToastMessage(`Pedido ${data.order.orderNumber} realizado com sucesso!`);
         setToastColor('success');
         setShowToast(true);
 
-        // Limpar carrinho
+        // Limpar carrinho local
         setCartItems([]);
 
         // Redirecionar após 2 segundos
@@ -104,11 +153,12 @@ const Checkout: React.FC = () => {
           history.push('/ecommerce');
         }, 2000);
       } else {
-        setToastMessage(response.error || 'Erro ao processar pedido');
+        setToastMessage(data.error || 'Erro ao processar pedido');
         setToastColor('danger');
         setShowToast(true);
       }
     } catch (error) {
+      console.error('Erro ao processar pedido:', error);
       setToastMessage('Erro ao conectar com o servidor');
       setToastColor('danger');
       setShowToast(true);
@@ -117,80 +167,22 @@ const Checkout: React.FC = () => {
     }
   };
 
-  const handleApplyPromo = async () => {
-    if (!promoCode) {
-      setToastMessage('Digite um código promocional');
-      setToastColor('danger');
-      setShowToast(true);
-      return;
-    }
-
-    setLoading(true);
-    const result = await checkoutService.validatePromoCode(promoCode);
-    setLoading(false);
-
-    setToastMessage(result.message);
-    setToastColor(result.valid ? 'success' : 'danger');
-    setShowToast(true);
-
-    if (result.valid) {
-      // Recarregar para atualizar totais
-      loadCart();
-    }
-  };
+  const total = calculateTotal();
 
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar className="custom-toolbar">
-          <IonButton slot="start" fill="clear" className="back-button" onClick={handleBack}>
-            <IonIcon icon={arrowBackOutline} />
+        <IonToolbar className="custom-header">
+          <IonButton slot="start" fill="clear" onClick={handleBack}>
+            <IonIcon icon={arrowBackOutline} className="back-icon" />
           </IonButton>
-          <div className="faixa-superior-fixa"></div>
-          <IonTitle className="custom-title">
-            <span className="title-text">Finalizar <span className="title-span">Compra</span></span>
+          <IonTitle className="header-title">
+            Criar <span className="highlight-text">uma conta</span>
           </IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen>
-        {/* Lista de Informações de Checkout */}
-        <IonList lines="full" className="checkout-list">
-          <IonItem button detail={false}>
-            <IonLabel>ENTREGA</IonLabel>
-            <p className="item-detail">Rua Exemplo, 123 - Centro</p>
-            <IonIcon icon={chevronForward} slot="end" color="medium" />
-          </IonItem>
-          
-          <IonItem button detail={false}>
-            <IonLabel>FRETE</IonLabel>
-            <p className="item-detail">
-              {totals.shipping === 0 ? 'Gratuito' : `R$ ${totals.shipping.toFixed(2)}`}
-              <br /> Padrão | 3 a 4 dias
-            </p>
-            <IonIcon icon={chevronForward} slot="end" color="medium" />
-          </IonItem>
-          
-          <IonItem button detail={false}>
-            <IonLabel>PAGAMENTO</IonLabel>
-            <p className="item-detail">Visa *1234</p>
-            <IonIcon icon={chevronForward} slot="end" color="medium" />
-          </IonItem>
-
-          <IonItem button detail={false} onClick={handleApplyPromo}>
-            <IonLabel>PROMOÇÕES</IonLabel>
-            <p className="item-detail">
-              {promoCode ? `Código: ${promoCode}` : 'Aplicar código promocional'}
-              <br />
-              <small>Códigos válidos: EUQUERO10, PRIMEIRACOMPRA</small>
-            </p>
-            <IonIcon icon={chevronForward} slot="end" color="medium" />
-          </IonItem>
-        </IonList>
-
-        {/* Seção de Itens (Produtos) */}
-        <div className="section-title">ITENS ({cartItems.length})</div>
-        
+      <IonContent fullscreen className="checkout-content">
         {cartItems.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: '#666' }}>
             <p>Seu carrinho está vazio</p>
@@ -198,76 +190,95 @@ const Checkout: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Cabeçalho da tabela de Itens */}
-            <IonGrid className="items-header ion-padding-horizontal">
-              <IonRow>
-                <IonCol size="4"> </IonCol>
-                <IonCol size="5">DESCRIÇÃO</IonCol>
-                <IonCol size="3" className="ion-text-right">PREÇO</IonCol>
-              </IonRow>
-            </IonGrid>
+            {/* Seção de Entrega */}
+            <div className="info-section">
+              <div className="section-label">ENTREGA</div>
+              <div className="section-content clickable">
+                <span className="section-text">Adicionar endereço de entrega</span>
+                <IonIcon icon={chevronForwardOutline} className="chevron-icon" />
+              </div>
+            </div>
 
-            {/* Itens do carrinho */}
-            {cartItems.map((item) => (
-              <IonGrid key={item.id} className="item-row ion-padding-horizontal">
-                <IonRow className="ion-align-items-center">
-                  <IonCol size="4">
+            {/* Seção de Frete */}
+            <div className="info-section">
+              <div className="section-label">FRETE</div>
+              <div className="section-content clickable">
+                <div className="section-text">
+                  <div className="frete-main">Gratuito</div>
+                  <div className="frete-sub">Padrão | 3 a 4 dias</div>
+                </div>
+                <IonIcon icon={chevronForwardOutline} className="chevron-icon" />
+              </div>
+            </div>
+
+            {/* Seção de Pagamento */}
+            <div className="info-section">
+              <div className="section-label">PAGAMENTO</div>
+              <div className="section-content clickable">
+                <span className="section-text">Visa *1234</span>
+                <IonIcon icon={chevronForwardOutline} className="chevron-icon" />
+              </div>
+            </div>
+
+            {/* Seção de Promoções */}
+            <div className="info-section">
+              <div className="section-label">PROMOÇÕES</div>
+              <div className="section-content clickable">
+                <span className="section-text">Aplicar código promocional</span>
+                <IonIcon icon={chevronForwardOutline} className="chevron-icon" />
+              </div>
+            </div>
+
+            {/* Seção de Itens */}
+            <div className="items-section">
+              <div className="items-header-row">
+                <span className="items-label">ITENS</span>
+                <span className="description-label">DESCRIÇÃO</span>
+                <span className="price-label">PREÇO</span>
+              </div>
+
+              {/* Itens do carrinho */}
+              {cartItems.map((item) => (
+                <div key={item.id} className="cart-item">
+                  <div className="item-image-container">
                     <img src={item.image} alt={item.name} className="item-image" />
-                  </IonCol>
-                  <IonCol size="5" className="item-description">
-                    {item.brand} <br />
-                    <strong>{item.name}</strong> <br />
-                    {item.color && `${item.color} - `}
-                    {item.size} <br />
-                    Quantidade: {item.quantity}
-                  </IonCol>
-                  <IonCol size="3" className="ion-text-right item-price">
-                    R$ {(item.price * item.quantity).toFixed(2)}
-                  </IonCol>
-                </IonRow>
-              </IonGrid>
-            ))}
+                  </div>
+                  <div className="item-details">
+                    <div className="item-brand">Stanley</div>
+                    <div className="item-name">{item.name}</div>
+                    <div className="item-quantity">Quantidade: {item.quantity < 10 ? '0' + item.quantity : item.quantity}</div>
+                  </div>
+                  <div className="item-price">
+                    R${(item.price * item.quantity).toFixed(2).replace('.', ',')}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-            {/* Seção de Resumo de Preços */}
-            <IonList lines="none" className="price-summary">
-              <IonItem>
-                <IonLabel>Subtotal ({cartItems.length})</IonLabel>
-                <IonLabel slot="end" className="price-label">
-                  R$ {totals.subtotal.toFixed(2)}
-                </IonLabel>
-              </IonItem>
-              <IonItem>
-                <IonLabel>Total do frete</IonLabel>
-                <IonLabel slot="end" className="price-label">
-                  {totals.shipping === 0 ? 'Gratuito' : `R$ ${totals.shipping.toFixed(2)}`}
-                </IonLabel>
-              </IonItem>
-              <IonItem>
-                <IonLabel>Impostos</IonLabel>
-                <IonLabel slot="end" className="price-label">
-                  R$ {totals.tax.toFixed(2)}
-                </IonLabel>
-              </IonItem>
-              {totals.discount > 0 && (
-                <IonItem>
-                  <IonLabel>Desconto</IonLabel>
-                  <IonLabel slot="end" className="price-label" style={{ color: 'green' }}>
-                    - R$ {totals.discount.toFixed(2)}
-                  </IonLabel>
-                </IonItem>
-              )}
-              <IonItem className="total-row">
-                <IonLabel>Total</IonLabel>
-                <IonLabel slot="end" className="total-price">
-                  R$ {totals.total.toFixed(2)}
-                </IonLabel>
-              </IonItem>
-            </IonList>
+            {/* Resumo de Preços */}
+            <div className="price-summary">
+              <div className="summary-row">
+                <span className="summary-label">Subtotal ({cartItems.length})</span>
+                <span className="summary-value">R${total.toFixed(2).replace('.', ',')}</span>
+              </div>
+              <div className="summary-row">
+                <span className="summary-label">Total do frete</span>
+                <span className="summary-value">Gratuito</span>
+              </div>
+              <div className="summary-row">
+                <span className="summary-label">Impostos</span>
+                <span className="summary-value">R$20,00</span>
+              </div>
+              <div className="summary-row total-row">
+                <span className="summary-label-bold">Total</span>
+                <span className="summary-value-bold">R${(total + 20).toFixed(2).replace('.', ',')}</span>
+              </div>
+            </div>
           </>
         )}
       </IonContent>
 
-      {/* Faixa inferior e botão fixo */}
+      {/* Botão de Finalizar */}
       {cartItems.length > 0 && (
         <div className="faixa-inferior-fixa">
           <IonButton 
@@ -275,7 +286,7 @@ const Checkout: React.FC = () => {
             onClick={handleProcessOrder}
             disabled={loading}
           >
-            {loading ? 'Processando...' : 'Fazer pedido'}
+            {loading ? 'Processando...' : 'Finalizar Pedido'}
           </IonButton>
         </div>
       )}
@@ -298,7 +309,7 @@ const Checkout: React.FC = () => {
         isOpen={showAlert}
         onDidDismiss={() => setShowAlert(false)}
         header={'Confirmar Pedido'}
-        message={`Deseja confirmar o pedido no valor de R$ ${totals.total.toFixed(2)}?`}
+        message={`Deseja confirmar o pedido no valor de R$ ${total.toFixed(2)}?`}
         buttons={[
           {
             text: 'Cancelar',
