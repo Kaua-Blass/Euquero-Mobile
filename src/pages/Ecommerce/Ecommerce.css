@@ -11,6 +11,14 @@ section-title {
   --color: black;
 }
 
+.tabBarFixa {
+  --background: #007bff; /* controla o fundo real */
+  --color: yellow;         /* cor dos ícones/textos */
+  --color-selected: white;
+  border-top: none;       /* remove linha branca superior */
+}
+
+
 .custom-text {
   position: absolute;
   z-index: 11;
@@ -57,3 +65,45 @@ section-title {
   font-size: 16px;
 
 }
+
+/* cards */
+.card-container {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 0;
+  transform: translateY(-300px); 
+  position: relative;
+  
+}
+.card-container ion-card {
+  width: 120px;
+  border: none;              
+  box-shadow: none;          
+  border-radius: 12px;
+  overflow: hidden;
+  text-align: center;
+}
+
+.card-container ion-card img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.card-container ion-card ion-card-title {
+  font-size: 10px; 
+  font-weight: bold; 
+  text-align: center; 
+}
+
+
+.titulo {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: left;
+  margin-bottom: -7px; 
+  color: #007bff;
+}
+

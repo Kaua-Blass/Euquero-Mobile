@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { IonContent, IonPage, IonInput, IonButton, IonLabel, IonText } from '@ionic/react';
 import './SignIn.css';
 
-const Login: React.FC = () => {
+const SignIn: React.FC = () => {
   const [email, setEmail] = useState('');
 
   const handleContinue = () => {
@@ -53,4 +53,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default SignIn;
