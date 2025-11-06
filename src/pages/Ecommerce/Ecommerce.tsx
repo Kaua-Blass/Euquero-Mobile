@@ -1,65 +1,115 @@
+import React, { useState, useEffect } from 'react';
 import { 
   IonPage,
-  IonHeader,
-  IonToolbar,
   IonContent,
   IonSearchbar,
-  IonTabBar,
-  IonTabButton,
+  IonButton,
   IonIcon,
-  IonLabel,
   IonCard, 
   IonCardHeader, 
-  IonCardSubtitle, 
   IonCardTitle,
-  IonTitle,
+  IonBadge,
+  IonToast,
 } from '@ionic/react';
-import { home, cart, person, logIn, personAddOutline, notifications } from 'ionicons/icons'; // Importar ícones
+import { cart, logIn, personAddOutline, notifications, addCircle } from 'ionicons/icons';
 import { produtosMock, Produto } from '../../data/produtosMock';
 import { tiposCoposMock, tiposCopos } from '../../data/coposMock';
 import './Ecommerce.css';
+import { useHistory } from 'react-router-dom';
+import { addProductToCart } from '../../utils/cartHelper';
+import { cartService } from '../../services/checkoutService';
 
-// Importar Swiper (certifique-se de instalar: npm install swiper)
+// Importar Swiper
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
 const Ecommerce: React.FC = () => {
+  const history = useHistory();
+  const [cartCount, setCartCount] = useState(0);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastColor, setToastColor] = useState<'success' | 'danger'>('success');
+
+  useEffect(() => {
+    // Atualizar contador do carrinho ao carregar
+    updateCartCount();
+  }, []);
+
+  const updateCartCount = () => {
+    const count = cartService.getTotalItems();
+    setCartCount(count);
+  };
+
+  const handleAddToCart = async (produto: Produto) => {
+    try {
+      const response = await addProductToCart(produto, 1);
+      
+      if (response.success) {
+        setToastMessage(response.message || 'Produto adicionado!');
+        setToastColor('success');
+        setShowToast(true);
+        
+        // Atualizar contador
+        updateCartCount();
+      } else {
+        setToastMessage(response.error || 'Erro ao adicionar produto');
+        setToastColor('danger');
+        setShowToast(true);
+      }
+    } catch (error) {
+      setToastMessage('Erro ao adicionar produto');
+      setToastColor('danger');
+      setShowToast(true);
+    }
+  };
+
+  const handleCartClick = () => {
+    history.push('/Checkout');
+  };
+
   return (
     <IonPage>
-      <IonHeader>
-        <IonTabBar slot="top" className="tabBarFixa">
-          <IonTabButton tab="signin" href="/signin">
-            <IonIcon icon={logIn} />
-            <IonLabel>Login</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="cadastro" href="/signup">
-            <IonIcon icon={personAddOutline} />
-            <IonLabel>Cadastro</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="carrinho" href="/checkout">
-            <IonIcon icon={cart} />
-            <IonLabel>Carrinho</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="notificacoes" href="/notificacoes">
-            <IonIcon icon={notifications} />
-            <IonLabel>Notificações</IonLabel>
-          </IonTabButton>
-        </IonTabBar>
-      </IonHeader>
-
       <IonContent>
-        {/* Cards hardcoded acima do swiper */}
+        {/* Searchbar */}
+        <div className="search-container">
+          <IonSearchbar placeholder="Buscar" className="custom-searchbar"></IonSearchbar>
+        </div>
+
+        {/* Botões de navegação horizontais */}
+        <div className="nav-buttons">
+          <IonButton onClick={() => history.push('/SignIn')}>
+            <IonIcon icon={logIn} />
+            <span>Login</span>
+          </IonButton>
+          <IonButton>
+            <IonIcon icon={personAddOutline} />
+            <span>Cadastro</span>
+          </IonButton>
+          <IonButton onClick={handleCartClick} className="cart-button-with-badge">
+            <IonIcon icon={cart} />
+            <span>Carrinho</span>
+            {cartCount > 0 && (
+              <IonBadge color="danger" className="cart-badge">{cartCount}</IonBadge>
+            )}
+          </IonButton>
+          <IonButton>
+            <IonIcon icon={notifications} />
+            <span>Notif</span>
+          </IonButton>
+        </div>
+
+        {/* Cards de categorias */}
         <div className='card-container'>
           <IonCard>
-            <img alt="COPOS" src="../public/copos.png" />
+            <img alt="COPOS" src="/copos.png" />
             <IonCardHeader>
               <IonCardTitle>COPOS</IonCardTitle>
             </IonCardHeader>
           </IonCard>
           <IonCard>
-            <img alt="PERSONALIZAR" src="../public/personalizar.png" />
+            <img alt="PERSONALIZAR" src="/personalizar.png" />
             <IonCardHeader>
               <IonCardTitle>PERSONALIZAR</IonCardTitle>
             </IonCardHeader>
@@ -85,9 +135,9 @@ const Ecommerce: React.FC = () => {
           </Swiper>
         </div>
 
-        {/* Swiper com produtos mockados */}
+        {/* Swiper com produtos */}
         <div className="swiper-container">
-          <h2>Produtos em Destaque</h2>
+          <h2>Produtos</h2>
           <Swiper
             modules={[Pagination]}
             spaceBetween={16}
@@ -96,21 +146,78 @@ const Ecommerce: React.FC = () => {
             className="products-swiper"
           >
             {produtosMock.map((produto: Produto) => (
-              <SwiperSlide key={produto.id} className="slide-item">
-                <img src={produto.imagem} alt={produto.nome} />
-                <p className="slide-title">{produto.nome}</p>
-                <p className="slide-price">
-                  {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </p>
+              <SwiperSlide key={produto.id} className="product-slide">
+                <div className="product-card">
+                  <img src={produto.imagem} alt={produto.nome} />
+                  <div className="product-info">
+                    <p className="product-brand">Stanley</p>
+                    <p className="product-name">{produto.nome}</p>
+                    <p className="product-price">
+                      {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </p>
+                    <IonButton 
+                      size="small" 
+                      className="add-to-cart-btn"
+                      onClick={() => handleAddToCart(produto)}
+                    >
+                      <IonIcon icon={addCircle} slot="start" />
+                      Adicionar
+                    </IonButton>
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+
+        {/* Swiper de descontos */}
+        <div className="swiper-container">
+          <h2>Descontos</h2>
+          <Swiper
+            modules={[Pagination]}
+            spaceBetween={16}
+            slidesPerView={2.5}
+            pagination={{ clickable: true }}
+            className="products-swiper"
+          >
+            {produtosMock.slice(0, 2).map((produto: Produto) => (
+              <SwiperSlide key={`desconto-${produto.id}`} className="product-slide">
+                <div className="product-card discount-card">
+                  <div className="discount-badge">-15%</div>
+                  <img src={produto.imagem} alt={produto.nome} />
+                  <div className="product-info">
+                    <p className="product-brand">Stanley</p>
+                    <p className="product-name">{produto.nome}</p>
+                    <p className="product-price-old">
+                      {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </p>
+                    <p className="product-price">
+                      {(produto.preco * 0.85).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </p>
+                    <IonButton 
+                      size="small" 
+                      className="add-to-cart-btn"
+                      onClick={() => handleAddToCart(produto)}
+                    >
+                      <IonIcon icon={addCircle} slot="start" />
+                      Adicionar
+                    </IonButton>
+                  </div>
+                </div>
               </SwiperSlide>
             ))}
           </Swiper>
         </div>
       </IonContent>
 
-      {/* Faixa inferior e botão fixo */}
-      <div className="faixa-inferior-fixa">
-      </div>
+      <IonToast
+        isOpen={showToast}
+        onDidDismiss={() => setShowToast(false)}
+        message={toastMessage}
+        duration={2000}
+        color={toastColor}
+        position="bottom"
+      />
     </IonPage>  
   );
 };
