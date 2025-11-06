@@ -1,58 +1,125 @@
 .login-content {
-  --background: #3498db; /* azul */
+  --background: #3498db;
 }
 
 .login-container {
   display: flex;
   flex-direction: column;
-  padding: 30px 20px;
+  padding: 60px 20px 30px;
   text-align: center;
+  height: 100%;
+  justify-content: center;
+}
+
+.login-title {
+  margin-bottom: 40px;
 }
 
 .login-title h1 {
-  font-size: 36px;
+  font-size: 42px;
   color: white;
+  font-weight: bold;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .login-title span {
-  color: #ffeb3b; /* amarelo */
+  color: #ffeb3b;
 }
 
 .login-subtitle {
   color: white;
-  margin: 15px 0 25px 0;
+  margin: 0 0 25px 0;
   font-size: 16px;
+  line-height: 1.4;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.login-subtitle .criar-conta {
+  font-weight: bold;
+}
+
+.login-subtitle .yellow-text {
+  color: #ffeb3b;
+  font-weight: bold;
 }
 
 .login-input {
   margin-bottom: 15px;
-  --padding-start: 10px;
+  --padding-start: 15px;
+  --background: white;
   height: 50px;
-  border-radius: 8px;
+  --border-radius: 8px;
+  --color: #333;
+  --placeholder-color: #999;
+  margin-top: 10px;
+  --text-align: left;
 }
 
 .login-button {
   --background: #ffeb3b;
   --color: black;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  height: 50px;
+  --border-radius: 8px;
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .login-or {
   color: white;
   margin: 10px 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-or::before,
+.login-or::after {
+  content: "";
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.5);
+  flex: 1;
+  margin: 0 15px;
 }
 
 .login-google, .login-apple {
   margin-bottom: 10px;
+  --background: white;
   --color: black;
+  --border-radius: 8px;
+  height: 50px;
+  --border-color: transparent;
+  --box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-google ion-icon, .login-apple ion-icon {
+  margin-right: 8px;
 }
 
 .login-footer {
   color: white;
   font-size: 12px;
-  margin-top: 20px;
+  margin-top: 30px;
+  line-height: 1.4;
+  padding: 0 20px;
 }
 
 .login-footer span {
+  color: #ffeb3b;
+  text-decoration: underline;
+}
+
+.login-back-button {
+  margin-top: 20px;
+  --color: white;
+  --background: transparent;
+  --border-style: none;
+  height: 40px;
+  font-size: 14px;
   text-decoration: underline;
 }

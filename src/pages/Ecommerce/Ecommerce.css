@@ -6,7 +6,6 @@ ion-grid {
   color: black
 }
 
-
 section-title {
   --color: black;
 }
@@ -18,7 +17,6 @@ section-title {
   border-top: none;       /* remove linha branca superior */
 }
 
-
 .custom-text {
   position: absolute;
   z-index: 11;
@@ -29,7 +27,6 @@ section-title {
   font-size: 22px;
   font-weight: bold;
 }
-
 
 .faixa-superior-fixa {
   background-color: #007bff;
@@ -63,7 +60,6 @@ section-title {
   height: 50px;
   font-weight: bold;
   font-size: 16px;
-
 }
 
 /* cards */
@@ -73,10 +69,10 @@ section-title {
   gap: 16px;
   flex-wrap: wrap;
   margin: 0;
-  transform: translateY(-300px); 
+  /* Removido: transform: translateY(-300px); - estava escondendo os cards */
   position: relative;
-  
 }
+
 .card-container ion-card {
   width: 120px;
   border: none;              
@@ -98,7 +94,6 @@ section-title {
   text-align: center; 
 }
 
-
 .titulo {
   font-size: 20px;
   font-weight: bold;
@@ -107,3 +102,63 @@ section-title {
   color: #007bff;
 }
 
+.swiper-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.swiper-container h2 {
+  text-align: left; /* Mudado de center para left */
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.products-swiper {
+  /* Estilos gerais do swiper, se necessário */
+}
+
+.slide-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  transition: transform 0.3s ease;
+}
+
+.slide-item:hover {
+  transform: translateY(-5px);
+}
+
+.slide-item img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.slide-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+  margin: 5px 0;
+  text-align: center;
+}
+
+.slide-price {
+  font-size: 1rem;
+  color: #007bff;
+  margin: 0;
+  text-align: center;
+}
+
+/* Estilos da paginação do Swiper */
+.swiper-pagination-bullet-active {
+  background: #007bff;
+}
