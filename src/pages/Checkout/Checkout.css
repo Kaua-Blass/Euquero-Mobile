@@ -27,11 +27,16 @@ ion-grid {
   font-size: 18px;
   font-weight: 600;
   color: white;
+  width: 100%;
+  position: absolute;
+  left: 0;
+  right: 0;
 }
 
 .highlight-text {
   color: #ffd700;
   font-weight: 700;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
 }
 
 /* Seções de informação (Entrega, Frete, Pagamento, Promoções) */
@@ -92,7 +97,7 @@ ion-grid {
 
 .items-header-row {
   display: grid;
-  grid-template-columns: 80px 1fr 100px;
+  grid-template-columns: 80px 1fr 120px;
   gap: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid #e0e0e0;
@@ -124,7 +129,7 @@ ion-grid {
 /* Item do carrinho */
 .cart-item {
   display: grid;
-  grid-template-columns: 80px 1fr 100px;
+  grid-template-columns: 80px 1fr 120px;
   gap: 12px;
   padding: 16px 0;
   border-bottom: 1px solid #f0f0f0;
@@ -177,11 +182,35 @@ ion-grid {
   margin-top: 4px;
 }
 
+.item-price-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
 .item-price {
   font-size: 16px;
   color: #333;
   font-weight: 600;
   text-align: right;
+}
+
+.remove-item-btn {
+  --padding-start: 0;
+  --padding-end: 0;
+  margin: 0;
+  height: 32px;
+  min-height: 32px;
+}
+
+.remove-icon {
+  font-size: 24px;
+  color: #999;
+}
+
+.remove-icon:hover {
+  color: #e74c3c;
 }
 
 /* Resumo de preços */
@@ -258,11 +287,11 @@ ion-grid {
 /* Responsividade */
 @media (max-width: 375px) {
   .items-header-row {
-    grid-template-columns: 70px 1fr 90px;
+    grid-template-columns: 70px 1fr 110px;
   }
   
   .cart-item {
-    grid-template-columns: 70px 1fr 90px;
+    grid-template-columns: 70px 1fr 110px;
   }
   
   .item-image-container {

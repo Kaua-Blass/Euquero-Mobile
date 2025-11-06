@@ -17,7 +17,7 @@ import {
   IonToast,
   IonAlert
 } from '@ionic/react';
-import { arrowBackOutline, trashOutline, chevronForwardOutline } from 'ionicons/icons';
+import { arrowBackOutline, trashOutline, chevronForwardOutline, closeOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import './Checkout.css';
 
@@ -248,8 +248,17 @@ const Checkout: React.FC = () => {
                     <div className="item-name">{item.name}</div>
                     <div className="item-quantity">Quantidade: {item.quantity < 10 ? '0' + item.quantity : item.quantity}</div>
                   </div>
-                  <div className="item-price">
-                    R${(item.price * item.quantity).toFixed(2).replace('.', ',')}
+                  <div className="item-price-container">
+                    <div className="item-price">
+                      R${(item.price * item.quantity).toFixed(2).replace('.', ',')}
+                    </div>
+                    <IonButton 
+                      fill="clear" 
+                      className="remove-item-btn"
+                      onClick={() => handleRemoveItem(item.id)}
+                    >
+                      <IonIcon icon={closeOutline} className="remove-icon" />
+                    </IonButton>
                   </div>
                 </div>
               ))}
