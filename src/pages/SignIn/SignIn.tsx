@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { IonContent, IonPage, IonInput, IonButton, IonText, IonIcon, IonLoading, IonToast } from '@ionic/react';
 import { logoGoogle, logoApple } from 'ionicons/icons';
 import { useHistory } from 'react-router';
-import { authService } from '../../services/authService';
+import { authService } from '../../services/authService'
 import './SignIn.css';
 
 const SignIn: React.FC = () => {
