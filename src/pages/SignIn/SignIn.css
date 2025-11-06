@@ -114,6 +114,26 @@
   text-decoration: underline;
 }
 
+.login-hint {
+  background-color: #f0f8ff;
+  border: 1px solid #2196F3;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 16px 0;
+  text-align: center;
+}
+
+.login-hint p {
+  margin: 4px 0;
+  font-size: 12px;
+  color: #333;
+}
+
+.login-hint strong {
+  color: #2196F3;
+  font-size: 13px;
+}
+
 .login-back-button {
   margin-top: 20px;
   --color: white;

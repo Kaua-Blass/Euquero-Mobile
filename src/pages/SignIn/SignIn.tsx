@@ -1,15 +1,53 @@
 import React, { useState } from 'react';
-import { IonContent, IonPage, IonInput, IonButton, IonText, IonIcon } from '@ionic/react';
+import { IonContent, IonPage, IonInput, IonButton, IonText, IonIcon, IonLoading, IonToast } from '@ionic/react';
 import { logoGoogle, logoApple } from 'ionicons/icons';
 import { useHistory } from 'react-router';
+import { authService } from '../../services/authService';
 import './SignIn.css';
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastColor, setToastColor] = useState<'success' | 'danger'>('success');
   const history = useHistory();
 
-  const handleContinue = () => {
-    console.log('Email:', email);
+  const handleContinue = async () => {
+    if (!email || !password) {
+      setToastMessage('Por favor, preencha todos os campos');
+      setToastColor('danger');
+      setShowToast(true);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await authService.login(email, password);
+
+      if (response.success) {
+        setToastMessage(`Bem-vindo, ${response.name}!`);
+        setToastColor('success');
+        setShowToast(true);
+
+        // Redirecionar para a página principal após 1 segundo
+        setTimeout(() => {
+          history.push('/ecommerce');
+        }, 1000);
+      } else {
+        setToastMessage(response.error || 'Erro ao fazer login');
+        setToastColor('danger');
+        setShowToast(true);
+      }
+    } catch (error) {
+      setToastMessage('Erro ao conectar com o servidor');
+      setToastColor('danger');
+      setShowToast(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => {
@@ -26,7 +64,7 @@ const SignIn: React.FC = () => {
           
           <IonText className="login-subtitle">
             <span className="criar-conta">Criar</span> <span className="yellow-text">uma conta</span><br />
-            Insira seu e-mail para se cadastrar neste aplicativo
+            Insira seu e-mail e senha para se cadastrar neste aplicativo
           </IonText>
 
           <IonInput
@@ -37,8 +75,21 @@ const SignIn: React.FC = () => {
             className="login-input"
           />
 
-          <IonButton expand="block" className="login-button" onClick={handleContinue}>
-            Continuar
+          <IonInput
+            value={password}
+            placeholder="Senha"
+            onIonChange={e => setPassword(e.detail.value!)}
+            type="password"
+            className="login-input"
+          />
+
+          <IonButton 
+            expand="block" 
+            className="login-button" 
+            onClick={handleContinue}
+            disabled={loading}
+          >
+            {loading ? 'Autenticando...' : 'Continuar'}
           </IonButton>
 
           <div className="login-or">ou</div>
@@ -59,6 +110,20 @@ const SignIn: React.FC = () => {
             Voltar
           </IonButton>
         </div>
+
+        <IonLoading
+          isOpen={loading}
+          message={'Autenticando...'}
+        />
+
+        <IonToast
+          isOpen={showToast}
+          onDidDismiss={() => setShowToast(false)}
+          message={toastMessage}
+          duration={3000}
+          color={toastColor}
+          position="top"
+        />
       </IonContent>
     </IonPage>
   );
