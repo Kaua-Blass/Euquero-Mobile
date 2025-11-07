@@ -32,7 +32,6 @@ const SignIn: React.FC = () => {
         setToastColor('success');
         setShowToast(true);
 
-        // Redirecionar para a página principal após 1 segundo
         setTimeout(() => {
           history.push('/ecommerce');
         }, 1000);

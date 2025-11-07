@@ -1,4 +1,3 @@
-/* Reset e configurações gerais */
 ion-content {
   --background: #f5f5f5;
 }
@@ -14,7 +13,6 @@ section-title {
   --color: black;
 }
 
-/* Searchbar */
 .search-container {
   padding: 16px;
   background: white;
@@ -27,7 +25,6 @@ section-title {
   --placeholder-color: #999;
 }
 
-/* Botões de navegação */
 .nav-buttons {
   display: flex;
   justify-content: space-around;
@@ -62,10 +59,10 @@ section-title {
 }
 
 .tabBarFixa {
-  --background: #007bff; /* controla o fundo real */
-  --color: yellow;         /* cor dos ícones/textos */
+  --background: #007bff; 
+  --color: yellow;         
   --color-selected: white;
-  border-top: none;       /* remove linha branca superior */
+  border-top: none;       
 }
 
 .custom-text {
@@ -113,14 +110,12 @@ section-title {
   font-size: 16px;
 }
 
-/* cards */
 .card-container {
   display: flex;
   justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
   margin: 0;
-  /* Removido: transform: translateY(-300px); - estava escondendo os cards */
   position: relative;
 }
 
@@ -160,17 +155,16 @@ section-title {
 }
 
 .swiper-container h2 {
-  text-align: left; /* Mudado de center para left */
+  text-align: left; 
   margin-bottom: 20px;
   font-size: 1.5rem;
   color: #333;
 }
 
 .products-swiper {
-  /* Estilos gerais do swiper, se necessário */
+
 }
 
-/* Slides de tipos de copos */
 .slide-item {
   display: flex;
   flex-direction: column;
@@ -203,7 +197,6 @@ section-title {
   text-align: center;
 }
 
-/* Slides de produtos */
 .product-slide {
   height: auto;
 }
@@ -267,12 +260,10 @@ section-title {
   margin: 4px 0;
 }
 
-/* Estilos da paginação do Swiper */
 .swiper-pagination-bullet-active {
   background: #007bff;
 }
 
-/* Badge do carrinho */
 .cart-button-with-badge {
   position: relative;
 }
@@ -292,7 +283,6 @@ section-title {
   z-index: 10;
 }
 
-/* Botão adicionar ao carrinho */
 .add-to-cart-btn {
   --background: #2196F3;
   --background-hover: #1976D2;
@@ -308,7 +298,6 @@ section-title {
   font-size: 16px;
 }
 
-/* Card de produto com desconto */
 .discount-card {
   position: relative;
 }

@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 
-// Usuários pré-cadastrados (sem opção de registro)
+// Usuários pré-cadastrados
 const users = [
   {
     id: 1,

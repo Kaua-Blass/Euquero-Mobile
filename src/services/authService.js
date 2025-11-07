@@ -14,7 +14,6 @@ export const authService = {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Armazenar token para sessões persistentes
         localStorage.setItem('token', data.token);
         return { success: true, name: data.name };
       } else {

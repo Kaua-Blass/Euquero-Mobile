@@ -12,48 +12,90 @@ import {
   IonToast,
 } from '@ionic/react';
 import { cart, logIn, personAddOutline, notifications, addCircle } from 'ionicons/icons';
-import { produtosMock, Produto } from '../../data/produtosMock';
-import { tiposCoposMock, tiposCopos } from '../../data/coposMock';
-import './Ecommerce.css';
 import { useHistory } from 'react-router-dom';
-
-// Importar Swiper
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import './Ecommerce.css';
+
+const API_BASE_URL = 'http://localhost:3000/api';
+
+interface Produto {
+  id: number;
+  nome: string;
+  preco: number;
+  imagem: string;
+  categoria: string;
+  descricao: string;
+}
+
+interface TipoCopo {
+  id: number;
+  nome: string;
+  imagem: string;
+  descricao: string;
+}
 
 const Ecommerce: React.FC = () => {
   const history = useHistory();
   const [cartCount, setCartCount] = useState(0);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [tiposCopos, setTiposCopos] = useState<TipoCopo[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastColor, setToastColor] = useState<'success' | 'danger'>('success');
 
   useEffect(() => {
-    // Atualizar contador do carrinho ao carregar
+    fetchProducts();
+    fetchTiposCopos();
     updateCartCount();
   }, []);
 
+  // Buscar produtos do backend
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/products`);
+      const data = await res.json();
+      if (data.success) setProdutos(data.products);
+    } catch (err) {
+      console.error('Erro ao buscar produtos:', err);
+    }
+  };
+
+  // Buscar tipos de copos do backend
+  const fetchTiposCopos = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/products/tipos/copos`);
+      const data = await res.json();
+      if (data.success) setTiposCopos(data.tipos);
+    } catch (err) {
+      console.error('Erro ao buscar tipos de copos:', err);
+    }
+  };
+
+  // Atualizar contagem do carrinho
   const updateCartCount = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/checkout/cart');
-      const data = await response.json();
-      
+      const res = await fetch(`${API_BASE_URL}/checkout/cart`, {
+        headers: { 'Authorization': `Bearer token-fake` }
+      });
+      const data = await res.json();
       if (data.success && data.cart) {
         setCartCount(data.cart.itemCount || 0);
       }
-    } catch (error) {
-      console.error('Erro ao buscar carrinho:', error);
+    } catch (err) {
+      console.error('Erro ao atualizar contagem do carrinho:', err);
     }
   };
 
   const handleAddToCart = async (produto: Produto) => {
     try {
-      const response = await fetch('http://localhost:3000/api/checkout/add-to-cart', {
+      const res = await fetch(`${API_BASE_URL}/checkout/add-to-cart`, {
         method: 'POST',
-        headers: {
+        headers: { 
           'Content-Type': 'application/json',
+          'Authorization': `Bearer token-fake` 
         },
         body: JSON.stringify({
           productId: produto.id,
@@ -63,23 +105,19 @@ const Ecommerce: React.FC = () => {
           image: produto.imagem
         })
       });
-
-      const data = await response.json();
-      
+      const data = await res.json();
       if (data.success) {
-        setToastMessage('Produto adicionado ao carrinho!');
+        setToastMessage(`Produto "${produto.nome}" adicionado ao carrinho!`);
         setToastColor('success');
         setShowToast(true);
-        
-        // Atualizar contador
         updateCartCount();
       } else {
         setToastMessage(data.error || 'Erro ao adicionar produto');
         setToastColor('danger');
         setShowToast(true);
       }
-    } catch (error) {
-      console.error('Erro ao adicionar ao carrinho:', error);
+    } catch (err) {
+      console.error('Erro ao adicionar ao carrinho:', err);
       setToastMessage('Erro ao conectar com o servidor');
       setToastColor('danger');
       setShowToast(true);
@@ -93,12 +131,10 @@ const Ecommerce: React.FC = () => {
   return (
     <IonPage>
       <IonContent>
-        {/* Searchbar */}
         <div className="search-container">
           <IonSearchbar placeholder="Buscar" className="custom-searchbar"></IonSearchbar>
         </div>
 
-        {/* Botões de navegação horizontais */}
         <div className="nav-buttons">
           <IonButton onClick={() => history.push('/SignIn')}>
             <IonIcon icon={logIn} />
@@ -147,7 +183,7 @@ const Ecommerce: React.FC = () => {
             pagination={{ clickable: true }}
             className="products-swiper"
           >
-            {tiposCoposMock.map((tipo: tiposCopos) => (
+            {tiposCopos.map(tipo => (
               <SwiperSlide key={tipo.id} className="slide-item">
                 <img src={tipo.imagem} alt={tipo.nome} />
                 <p className="slide-title">{tipo.nome}</p>
@@ -166,54 +202,14 @@ const Ecommerce: React.FC = () => {
             pagination={{ clickable: true }}
             className="products-swiper"
           >
-            {produtosMock.map((produto: Produto) => (
+            {produtos.map(produto => (
               <SwiperSlide key={produto.id} className="product-slide">
                 <div className="product-card">
                   <img src={produto.imagem} alt={produto.nome} />
                   <div className="product-info">
-                    <p className="product-brand">Stanley</p>
                     <p className="product-name">{produto.nome}</p>
                     <p className="product-price">
                       {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </p>
-                    <IonButton 
-                      size="small" 
-                      className="add-to-cart-btn"
-                      onClick={() => handleAddToCart(produto)}
-                    >
-                      <IonIcon icon={addCircle} slot="start" />
-                      Adicionar
-                    </IonButton>
-                  </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-
-        {/* Swiper de descontos */}
-        <div className="swiper-container">
-          <h2>Descontos</h2>
-          <Swiper
-            modules={[Pagination]}
-            spaceBetween={16}
-            slidesPerView={2.5}
-            pagination={{ clickable: true }}
-            className="products-swiper"
-          >
-            {produtosMock.slice(0, 2).map((produto: Produto) => (
-              <SwiperSlide key={`desconto-${produto.id}`} className="product-slide">
-                <div className="product-card discount-card">
-                  <div className="discount-badge">-15%</div>
-                  <img src={produto.imagem} alt={produto.nome} />
-                  <div className="product-info">
-                    <p className="product-brand">Stanley</p>
-                    <p className="product-name">{produto.nome}</p>
-                    <p className="product-price-old">
-                      {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </p>
-                    <p className="product-price">
-                      {(produto.preco * 0.85).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </p>
                     <IonButton 
                       size="small" 
