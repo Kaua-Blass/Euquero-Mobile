@@ -15,3 +15,5 @@ npm run dev
 ```
 node server.js
 ```
+
+#### Gabriel Esteves - Kauã Blass - Vinicius Dutra
